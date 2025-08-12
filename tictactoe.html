@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tic Tac Toe - 3 Rounds</title>
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      background-color: #0d0d0d;
+      color: #e0e0e0;
+      overflow: hidden;
+    }
+
+    h1 {
+      margin: 20px 0;
+      font-size: 3rem;
+      color: #ff6f61;
+      text-shadow: 0 0 20px #ff6f61;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 120px);
+      grid-template-rows: repeat(3, 120px);
+      gap: 10px;
+      justify-content: center;
+      margin: 20px auto;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .cell {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 120px;
+      height: 120px;
+      background-color: #1e1e1e;
+      border: 2px solid #333;
+      font-size: 40px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+      color: #fff;
+      text-shadow: 0 0 10px #ff6f61;
+    }
+
+    .cell:hover {
+      background-color: #292929;
+      border-color: #ff6f61;
+      box-shadow: 0 0 15px #ff6f61;
+    }
+
+    .cell.taken {
+      cursor: not-allowed;
+      color: #777;
+      text-shadow: none;
+    }
+
+    .message {
+      font-size: 1.8rem;
+      margin: 20px 0;
+      color: #ff6f61;
+      text-shadow: 0 0 10px #ff6f61;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+
+    .restart {
+      padding: 12px 25px;
+      font-size: 18px;
+      background-color: #ff6f61;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 0 15px #ff6f61;
+    }
+
+    .restart:hover {
+      background-color: #ff3f31;
+      box-shadow: 0 0 20px #ff3f31;
+    }
+
+    .background {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle, #0d0d0d, #000);
+      z-index: -1;
+      overflow: hidden;
+    }
+
+    .background span {
+      position: absolute;
+      display: block;
+      width: 25px;
+      height: 25px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      animation: move 10s linear infinite;
+    }
+
+    @keyframes move {
+      from {
+        transform: translateY(0) scale(1);
+      }
+      to {
+        transform: translateY(-100vh) scale(0.5);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="background">
+    <span style="left: 10%; animation-delay: 0s; animation-duration: 6s;"></span>
+    <span style="left: 30%; animation-delay: 2s; animation-duration: 8s;"></span>
+    <span style="left: 50%; animation-delay: 4s; animation-duration: 5s;"></span>
+    <span style="left: 70%; animation-delay: 1s; animation-duration: 7s;"></span>
+    <span style="left: 90%; animation-delay: 3s; animation-duration: 9s;"></span>
+  </div>
+
+  <h1>Tic Tac Toe - 3 Rounds</h1>
+  <div class="board" id="board"></div>
+  <div class="message" id="message"></div>
+  <div id="scoreboard" style="margin: 20px; font-size: 1.5rem;">
+    Player X: <span id="scoreX">0</span> | Player O: <span id="scoreO">0</span>
+  </div>
+  <button class="restart" id="restart">Restart Game</button>
+
+  <script>
+    const board = document.getElementById('board');
+    const message = document.getElementById('message');
+    const restartButton = document.getElementById('restart');
+    const scoreX = document.getElementById('scoreX');
+    const scoreO = document.getElementById('scoreO');
+
+    let currentPlayer = 'X';
+    let gameActive = true;
+    let gameState = Array(9).fill(null);
+    let scores = { X: 0, O: 0 };
+    let round = 1;
+
+    const winningConditions = [
+      [0, 1, 2],
+      [3, 4, 5],
+      [6, 7, 8],
+      [0, 3, 6],
+      [1, 4, 7],
+      [2, 5, 8],
+      [0, 4, 8],
+      [2, 4, 6]
+    ];
+
+    function checkWin() {
+      for (let condition of winningConditions) {
+        const [a, b, c] = condition;
+        if (gameState[a] && gameState[a] === gameState[b] && gameState[a] === gameState[c]) {
+          return gameState[a];
+        }
+      }
+      return null;
+    }
+
+    function checkDraw() {
+      return gameState.every(cell => cell !== null);
+    }
+
+    function handleClick(event) {
+      const cell = event.target;
+      const cellIndex = cell.getAttribute('data-index');
+
+      if (gameState[cellIndex] || !gameActive) {
+        return;
+      }
+
+      gameState[cellIndex] = currentPlayer;
+      cell.textContent = currentPlayer;
+      cell.classList.add('taken');
+
+      const winner = checkWin();
+      if (winner) {
+        message.textContent = `Player ${winner} wins this round!`;
+        scores[winner]++;
+        updateScore();
+        round++;
+        if (round > 3) {
+          endGame();
+        } else {
+          setTimeout(resetBoard, 1500);
+        }
+        return;
+      }
+
+      if (checkDraw()) {
+        message.textContent = 'This round is a draw!';
+        round++;
+        if (round > 3) {
+          endGame();
+        } else {
+          setTimeout(resetBoard, 1500);
+        }
+        return;
+      }
+
+      currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+      message.textContent = `Player ${currentPlayer}'s turn`;
+
+      if (currentPlayer === 'O') {
+        setTimeout(computerMove, 500);
+      }
+    }
+
+    function computerMove() {
+      let availableCells = gameState.map((cell, index) => cell === null ? index : null).filter(index => index !== null);
+
+      if (availableCells.length > 0) {
+        const randomIndex = availableCells[Math.floor(Math.random() * availableCells.length)];
+        gameState[randomIndex] = 'O';
+
+        const cell = document.querySelector(`[data-index='${randomIndex}']`);
+        cell.textContent = 'O';
+        cell.classList.add('taken');
+
+        const winner = checkWin();
+        if (winner) {
+          message.textContent = `Player ${winner} wins this round!`;
+          scores[winner]++;
+          updateScore();
+          round++;
+          if (round > 3) {
+            endGame();
+          } else {
+            setTimeout(resetBoard, 1500);
+          }
+          return;
+        }
+
+        if (checkDraw()) {
+          message.textContent = 'This round is a draw!';
+          round++;
+          if (round > 3) {
+            endGame();
+          } else {
+            setTimeout(resetBoard, 1500);
+          }
+          return;
+        }
+
+        currentPlayer = 'X';
+        message.textContent = `Player ${currentPlayer}'s turn`;
+      }
+    }
+
+    function updateScore() {
+      scoreX.textContent = scores.X;
+      scoreO.textContent = scores.O;
+    }
+
+    function resetBoard() {
+      gameState = Array(9).fill(null);
+      board.innerHTML = '';
+      createBoard();
+      currentPlayer = 'X';
+      gameActive = true;
+      message.textContent = `Player ${currentPlayer}'s turn`;
+    }
+
+    function endGame() {
+      gameActive = false;
+      const winner = scores.X > scores.O ? 'X' : scores.O > scores.X ? 'O' : 'No one';
+      message.textContent = `Game Over! ${winner} wins the game!`;
+    }
+
+    function restartGame() {
+      currentPlayer = 'X';
+      gameActive = true;
+      gameState = Array(9).fill(null);
+      scores = { X: 0, O: 0 };
+      round = 1;
+      updateScore();
+      message.textContent = `Player ${currentPlayer}'s turn`;
+      board.innerHTML = '';
+      createBoard();
+    }
+
+    function createBoard() {
+      for (let i = 0; i < 9; i++) {
+        const cell = document.createElement('div');
+        cell.classList.add('cell');
+        cell.setAttribute('data-index', i);
+        cell.addEventListener('click', handleClick);
+        board.appendChild(cell);
+      }
+    }
+
+    restartButton.addEventListener('click', restartGame);
+    restartGame();
+  </script>
+</body>
+</html>
