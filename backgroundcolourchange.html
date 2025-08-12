@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Background Color Changer</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+            transition: background-color 0.5s;
+        }
+        .container {
+            margin-top: 100px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 18px;
+            margin: 10px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+        }
+        #startBtn {
+            background-color: green;
+            color: white;
+        }
+        #stopBtn {
+            background-color: red;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button id="startBtn">Start</button>
+        <button id="stopBtn">Stop</button>
+    </div>
+    <script>
+        let interval;
+        function getRandomColor() {
+            let letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+        document.getElementById("startBtn").addEventListener("click", function() {
+            if (!interval) {
+                interval = setInterval(() => {
+                    document.body.style.backgroundColor = getRandomColor();
+                }, 500);
+            }
+        });
+        document.getElementById("stopBtn").addEventListener("click", function() {
+            clearInterval(interval);
+            interval = null;
+        });
+    </script>
+</body>
+</html>
